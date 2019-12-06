@@ -1,8 +1,8 @@
-// Macro to calculate Coefficient of Variation (CV), defined as Var(Img)/(Ave(Img)^2) = 1/nFrames * Sum[[(Img-Ave(Img)/Ave(Img)]^2]
+// Macro to calculate the Squared Coefficient of Variation (SCV), defined as Var(Img)/(Ave(Img)^2) = 1/nFrames * Sum[[(Img-Ave(Img)/Ave(Img)]^2]
 // Output is a single TIF file for each file, highlighting the most active regions across the time series
 
 parentDir = getDirectory("Select folder containing bleach-corrected tif stacks");
-saveDir   = getDirectory("Now select folder to save (dF/F)^2 coefficient of variation (CV) tif images");
+saveDir   = getDirectory("Now select folder to save Squared Coefficient of Variation (SCV) tif images");
 stackList = getFileList(parentDir);
 
 setBatchMode(true);
@@ -13,8 +13,8 @@ for (i=0; i<stackList.length; i++) {
 	// Import Stack
 	open(parentDir + stackList[i]);
     stackName = getTitle();
-    print("Computing (dF/F)^2 Coeff. of Var. for file: " + stackName); 
-    cvImage = substring(stackName, 0, lengthOf(stackName) - 4) + "_CV";
+    print("Computing Squared Coefficient of Variation (SCV) [Var(F)/Ave(F)^2] for file: " + stackName); 
+    scvImage = substring(stackName, 0, lengthOf(stackName) - 4) + "_SCV";
     
 	// Apply Gaussian filter to time series
 	run("Duplicate...", "duplicate");
@@ -43,16 +43,16 @@ for (i=0; i<stackList.length; i++) {
 		rename(multImage);
 	
 		if (j==1) {
-			rename(cvImage);
+			rename(scvImage);
 		} else {
-			imageCalculator("Add create 32-bit", cvImage, multImage);
-			newCVImage = getTitle();
+			imageCalculator("Add create 32-bit", scvImage, multImage);
+			newSCVImage = getTitle();
 			selectWindow(multImage);
 			close();
-			selectWindow(cvImage);
+			selectWindow(scvImage);
 			close();
-			selectWindow(newCVImage);
-			rename(cvImage);
+			selectWindow(newSCVImage);
+			rename(scvImage);
 		}
 		selectWindow(divImage);
 		close();
@@ -65,12 +65,12 @@ for (i=0; i<stackList.length; i++) {
 	close();
 	selectWindow(aveImage);
 	close();
-	selectWindow(cvImage);
+	selectWindow(scvImage);
 	run("Divide...", "value=" + nFrames);
 	run("Enhance Contrast", "saturated=0.35");
 	
 	// Save File
-	saveName = saveDir + cvImage;
+	saveName = saveDir + scvImage;
 	print("Saving file: " + saveName); 
 	saveAs("Tiff", saveName);
 	close();
@@ -78,4 +78,4 @@ for (i=0; i<stackList.length; i++) {
 }
 
 setBatchMode(false);
-waitForUser("(dF/F)^2 CoeffVar macro finished for folder " + parentDir);
+waitForUser("(Squared Coefficient of Variation (SCV) macro finished for folder " + parentDir);
