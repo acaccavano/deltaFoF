@@ -1,8 +1,8 @@
-// Macro to calculate residuals, defined as Sum[[(F(t)-Ave(F(t))/Ave(F(t))]^2]
+// Macro to calculate Coefficient of Variation (CV), defined as Var(Img)/(Ave(Img)^2) = 1/nFrames * Sum[[(Img-Ave(Img)/Ave(Img)]^2]
 // Output is a single TIF file for each file, highlighting the most active regions across the time series
 
 parentDir = getDirectory("Select folder containing bleach-corrected tif stacks");
-saveDir   = getDirectory("Now select folder to save (dF/F)^2 residual tif images");
+saveDir   = getDirectory("Now select folder to save (dF/F)^2 coefficient of variation (CV) tif images");
 stackList = getFileList(parentDir);
 
 setBatchMode(true);
@@ -13,8 +13,8 @@ for (i=0; i<stackList.length; i++) {
 	// Import Stack
 	open(parentDir + stackList[i]);
     stackName = getTitle();
-    print("Computing (dF/F)^2 residual for file: " + stackName); 
-    resImage = substring(stackName, 0, lengthOf(stackName) - 4) + "_Residual";
+    print("Computing (dF/F)^2 Coeff. of Var. for file: " + stackName); 
+    cvImage = substring(stackName, 0, lengthOf(stackName) - 4) + "_CV";
     
 	// Apply Gaussian filter to time series
 	run("Duplicate...", "duplicate");
@@ -43,31 +43,34 @@ for (i=0; i<stackList.length; i++) {
 		rename(multImage);
 	
 		if (j==1) {
-			rename(resImage);
+			rename(cvImage);
 		} else {
-			imageCalculator("Add create 32-bit", resImage, multImage);
-			newResImage = getTitle();
+			imageCalculator("Add create 32-bit", cvImage, multImage);
+			newCVImage = getTitle();
 			selectWindow(multImage);
 			close();
-			selectWindow(resImage);
+			selectWindow(cvImage);
 			close();
-			selectWindow(newResImage);
-			rename(resImage);
+			selectWindow(newCVImage);
+			rename(cvImage);
 		}
 		selectWindow(divImage);
 		close();
 		selectWindow(diffImage);
 		close();
 	}
+	selectWindow(stackName);
+	close();
 	selectWindow(filtStack);
 	close();
 	selectWindow(aveImage);
 	close();
-	selectWindow(resImage);
+	selectWindow(cvImage);
+	run("Divide...", "value=" + nFrames);
 	run("Enhance Contrast", "saturated=0.35");
 	
 	// Save File
-	saveName = saveDir + resImage;
+	saveName = saveDir + cvImage;
 	print("Saving file: " + saveName); 
 	saveAs("Tiff", saveName);
 	close();
@@ -75,4 +78,4 @@ for (i=0; i<stackList.length; i++) {
 }
 
 setBatchMode(false);
-waitForUser("(dF/F)^2 residual macro finished for folder " + parentDir);
+waitForUser("(dF/F)^2 CoeffVar macro finished for folder " + parentDir);
